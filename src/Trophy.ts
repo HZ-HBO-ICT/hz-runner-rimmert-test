@@ -82,8 +82,8 @@ export default class Trophy {
    *
    * @param elapsed the time elapsed in ms since the previous update
    */
-  public move(elapsed: number): void {
-    this.positionY += this.speed * elapsed;
+  public move(): void {
+    this.positionY += this.speed;
   }
 
   /**

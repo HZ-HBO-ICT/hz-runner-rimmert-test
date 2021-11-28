@@ -38,8 +38,8 @@ export default class Trophy {
     get $speed() {
         return this.speed;
     }
-    move(elapsed) {
-        this.positionY += this.speed * elapsed;
+    move() {
+        this.positionY += this.speed;
     }
     collisionWithCanvasBottom() {
         if (this.positionY + this.image.height > this.canvas.height) {

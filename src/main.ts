@@ -1,4 +1,3 @@
-import GameLoop from './GameLoop.js';
 import Player from './Player.js';
 import Trophy from './Trophy.js';
 
@@ -20,7 +19,7 @@ export default class Game {
   // KeyListener so the user can give input
   // private keyListener: KeyListener;
 
-  private gameloop: GameLoop;
+  // private gameloop: GameLoop;
 
   // The player on the canvas
   private player: Player;
@@ -73,16 +72,25 @@ export default class Game {
     // Start the animation
     console.log('start animation');
     console.log(this.trophy);
-    this.gameloop = new GameLoop(this);
-    this.gameloop.start();
+    this.loop();
+    // this.gameloop = new GameLoop(this);
+    // this.gameloop.start();
   }
 
   /**
+   * Looping the game
+   */
+  private loop = () => {
+    this.update();
+    this.render();
+    requestAnimationFrame(this.loop);
+  };
+  /**
    * Handles any user input that has happened since the last call
    */
-  public processInput(): void {
-    this.player.move();
-  }
+  // public processInput(): void {
+  //   this.player.move();
+  // }
 
   // public processInput(): void {
   //   // Move player
@@ -108,12 +116,12 @@ export default class Game {
    *   call
    * @returns `true` if the game should stop animation
    */
-  public update(elapsed: number): boolean {
+  public update(): boolean {
     // Move objects
     // TODO adjust for multiple objects
-    this.trophy.move(elapsed);
+    this.trophy.move();
     // this.trophyPositionY += this.trophySpeed * elapsed;
-
+    this.player.move();
     // Collision detection of objects and player
     // Use the bounding box detection method: https://computersciencewiki.org/index.php/Bounding_boxes
     // TODO adjust for multiple objects
@@ -137,7 +145,7 @@ export default class Game {
     }
 
     // Collision detection of objects with bottom of the canvas
-    if (this.trophy.collisionWithCanvasBottom) {
+    if (this.trophy.collisionWithCanvasBottom()) {
       // Create a new trophy in a random lane
       this.trophy = new Trophy(this.canvas);
       // const random = Game.randomInteger(1, 3);

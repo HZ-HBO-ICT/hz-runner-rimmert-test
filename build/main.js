@@ -1,10 +1,8 @@
-import GameLoop from './GameLoop.js';
 import Player from './Player.js';
 import Trophy from './Trophy.js';
 console.log('Javascript is working!');
 export default class Game {
     canvas;
-    gameloop;
     player;
     trophy;
     constructor(canvas) {
@@ -15,18 +13,20 @@ export default class Game {
         this.player = new Player(this.canvas);
         console.log('start animation');
         console.log(this.trophy);
-        this.gameloop = new GameLoop(this);
-        this.gameloop.start();
+        this.loop();
     }
-    processInput() {
+    loop = () => {
+        this.update();
+        this.render();
+        requestAnimationFrame(this.loop);
+    };
+    update() {
+        this.trophy.move();
         this.player.move();
-    }
-    update(elapsed) {
-        this.trophy.move(elapsed);
         if (this.player.collidesWithTrophy(this.trophy)) {
             this.trophy = new Trophy(this.canvas);
         }
-        if (this.trophy.collisionWithCanvasBottom) {
+        if (this.trophy.collisionWithCanvasBottom()) {
             this.trophy = new Trophy(this.canvas);
         }
         return false;
