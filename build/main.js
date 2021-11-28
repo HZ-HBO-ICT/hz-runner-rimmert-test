@@ -1,42 +1,96 @@
-import GameLoop from './GameLoop.js';
-import Player from './Player.js';
-import Trophy from './Trophy.js';
+import KeyListener from './KeyListener.js';
 console.log('Javascript is working!');
 export default class Game {
     canvas;
-    gameloop;
-    player;
-    trophy;
+    leftLane;
+    middleLane;
+    rightLane;
+    keyListener;
+    playerImage;
+    playerPositionX;
+    trophyImage;
+    trophyPositionX;
+    trophyPositionY;
+    trophySpeed;
     constructor(canvas) {
         this.canvas = canvas;
         this.canvas.width = window.innerWidth / 3;
         this.canvas.height = window.innerHeight;
-        this.trophy = new Trophy(this.canvas);
-        this.player = new Player(this.canvas);
+        this.leftLane = this.canvas.width / 4;
+        this.middleLane = this.canvas.width / 2;
+        this.rightLane = (this.canvas.width / 4) * 3;
+        this.keyListener = new KeyListener();
+        this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
+        this.trophyPositionX = this.canvas.width / 2;
+        this.trophyPositionY = 60;
+        this.trophySpeed = 1;
+        this.playerImage = Game.loadNewImage('./assets/img/players/character_robot_walk0.png');
+        this.playerPositionX = this.canvas.width / 2;
         console.log('start animation');
-        console.log(this.trophy);
-        this.gameloop = new GameLoop(this);
-        this.gameloop.start();
+        this.loop();
     }
     processInput() {
-        this.player.move();
+        if (this.keyListener.isKeyDown(KeyListener.KEY_LEFT)
+            && this.playerPositionX !== this.leftLane) {
+            this.playerPositionX = this.leftLane;
+        }
+        if (this.keyListener.isKeyDown(KeyListener.KEY_UP)
+            && this.playerPositionX !== this.middleLane) {
+            this.playerPositionX = this.middleLane;
+        }
+        if (this.keyListener.isKeyDown(KeyListener.KEY_RIGHT)
+            && this.playerPositionX !== this.rightLane) {
+            this.playerPositionX = this.rightLane;
+        }
     }
-    update(elapsed) {
-        this.trophy.move(elapsed);
-        if (this.player.collidesWithTrophy(this.trophy)) {
-            this.trophy = new Trophy(this.canvas);
+    loop = () => {
+        this.processInput();
+        this.update();
+        this.render();
+        requestAnimationFrame(this.loop);
+    };
+    update() {
+        this.trophyPositionY += this.trophySpeed;
+        if (this.playerPositionX < this.trophyPositionX + this.trophyImage.width
+            && this.playerPositionX + this.playerImage.width > this.trophyPositionX
+            && this.canvas.height - 150 < this.trophyPositionY + this.trophyImage.height
+            && this.canvas.height - 150 + this.playerImage.height > this.trophyPositionY) {
+            const random = Game.randomInteger(1, 3);
+            if (random === 1) {
+                this.trophyPositionX = this.leftLane;
+            }
+            if (random === 2) {
+                this.trophyPositionX = this.middleLane;
+            }
+            if (random === 3) {
+                this.trophyPositionX = this.rightLane;
+            }
+            this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
+            this.trophyPositionY = 60;
+            this.trophySpeed = 1;
         }
-        if (this.trophy.collisionWithCanvasBottom) {
-            this.trophy = new Trophy(this.canvas);
+        if (this.trophyPositionY + this.trophyImage.height > this.canvas.height) {
+            const random = Game.randomInteger(1, 3);
+            if (random === 1) {
+                this.trophyPositionX = this.leftLane;
+            }
+            if (random === 2) {
+                this.trophyPositionX = this.middleLane;
+            }
+            if (random === 3) {
+                this.trophyPositionX = this.rightLane;
+            }
+            this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
+            this.trophyPositionY = 60;
+            this.trophySpeed = 1;
         }
-        return false;
     }
     render() {
         const ctx = this.canvas.getContext('2d');
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.writeTextToCanvas('UP arrow = middle | LEFT arrow = left | RIGHT arrow = right', this.canvas.width / 2, 40, 14);
-        this.player.draw(ctx);
-        this.trophy.draw(ctx);
+        ctx.drawImage(this.playerImage, this.playerPositionX - this.playerImage.width / 2, this.canvas.height - 150);
+        ctx.drawImage(this.trophyImage, this.trophyPositionX - this.trophyImage.width / 2, this.trophyPositionY);
     }
     writeTextToCanvas(text, xCoordinate, yCoordinate, fontSize = 20, color = 'red', alignment = 'center') {
         const ctx = this.canvas.getContext('2d');
@@ -44,6 +98,14 @@ export default class Game {
         ctx.fillStyle = color;
         ctx.textAlign = alignment;
         ctx.fillText(text, xCoordinate, yCoordinate);
+    }
+    static randomInteger(min, max) {
+        return Math.round(Math.random() * (max - min) + min);
+    }
+    static loadNewImage(source) {
+        const img = new Image();
+        img.src = source;
+        return img;
     }
 }
 window.addEventListener('load', () => new Game(document.getElementById('canvas')));

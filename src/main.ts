@@ -1,6 +1,4 @@
-import GameLoop from './GameLoop.js';
-import Player from './Player.js';
-import Trophy from './Trophy.js';
+import KeyListener from './KeyListener.js';
 
 console.log('Javascript is working!');
 
@@ -11,34 +9,29 @@ export default class Game {
   // The canvas
   private canvas: HTMLCanvasElement;
 
-  // private leftLane: number;
+  private leftLane: number;
 
-  // private middleLane: number;
+  private middleLane: number;
 
-  // private rightLane: number;
+  private rightLane: number;
 
   // KeyListener so the user can give input
-  // private keyListener: KeyListener;
-
-  private gameloop: GameLoop;
+  private keyListener: KeyListener;
 
   // The player on the canvas
-  private player: Player;
+  private playerImage: HTMLImageElement;
 
-  // private playerImage: HTMLImageElement;
-
-  // private playerPositionX: number;
+  private playerPositionX: number;
 
   // The objects on the canvas
   // TODO make multiple objects instead of one
-  private trophy: Trophy;
-  // private trophyImage: HTMLImageElement;
+  private trophyImage: HTMLImageElement;
 
-  // private trophyPositionX: number;
+  private trophyPositionX: number;
 
-  // private trophyPositionY: number;
+  private trophyPositionY: number;
 
-  // private trophySpeed: number;
+  private trophySpeed: number;
 
   /**
    * Construct a new Game
@@ -53,109 +46,108 @@ export default class Game {
     this.canvas.height = window.innerHeight;
 
     // x positions of the lanes in the canvas
-    // this.leftLane = this.canvas.width / 4;
-    // this.middleLane = this.canvas.width / 2;
-    // this.rightLane = (this.canvas.width / 4) * 3;
+    this.leftLane = this.canvas.width / 4;
+    this.middleLane = this.canvas.width / 2;
+    this.rightLane = (this.canvas.width / 4) * 3;
+
+    this.keyListener = new KeyListener();
 
     // TODO create multiple objects over time
-    this.trophy = new Trophy(this.canvas);
-    // this.trophy = null;
-    // this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
-    // this.trophyPositionX = this.canvas.width / 2;
-    // this.trophyPositionY = 60;
-    // this.trophySpeed = 1;
+    this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
+    this.trophyPositionX = this.canvas.width / 2;
+    this.trophyPositionY = 60;
+    this.trophySpeed = 1;
 
     // Set the player at the center
-    this.player = new Player(this.canvas);
-    // this.playerImage = Game.loadNewImage('./assets/img/players/character_robot_walk0.png');
-    // this.playerPositionX = this.canvas.width / 2;
+    this.playerImage = Game.loadNewImage('./assets/img/players/character_robot_walk0.png');
+    this.playerPositionX = this.canvas.width / 2;
 
     // Start the animation
     console.log('start animation');
-    console.log(this.trophy);
-    this.gameloop = new GameLoop(this);
-    this.gameloop.start();
+    this.loop();
   }
 
   /**
    * Handles any user input that has happened since the last call
    */
   public processInput(): void {
-    this.player.move();
+    // Move player
+    if (this.keyListener.isKeyDown(KeyListener.KEY_LEFT)
+        && this.playerPositionX !== this.leftLane) {
+      this.playerPositionX = this.leftLane;
+    }
+    if (this.keyListener.isKeyDown(KeyListener.KEY_UP)
+        && this.playerPositionX !== this.middleLane) {
+      this.playerPositionX = this.middleLane;
+    }
+    if (this.keyListener.isKeyDown(KeyListener.KEY_RIGHT)
+        && this.playerPositionX !== this.rightLane) {
+      this.playerPositionX = this.rightLane;
+    }
   }
 
-  // public processInput(): void {
-  //   // Move player
-  //   if (this.keyListener.isKeyDown(KeyListener.KEY_LEFT)
-  //       && this.playerPositionX !== this.leftLane) {
-  //     this.playerPositionX = this.leftLane;
-  //   }
-  //   if (this.keyListener.isKeyDown(KeyListener.KEY_UP)
-  //       && this.playerPositionX !== this.middleLane) {
-  //     this.playerPositionX = this.middleLane;
-  //   }
-  //   if (this.keyListener.isKeyDown(KeyListener.KEY_RIGHT)
-  //       && this.playerPositionX !== this.rightLane) {
-  //     this.playerPositionX = this.rightLane;
-  //   }
-  // }
+  /**
+   * The Gameloop
+   */
+  private loop = () => {
+    this.processInput();
+    this.update();
+    this.render();
+    requestAnimationFrame(this.loop);
+  };
 
   /**
-   * Advances the game simulation one step. It may run AI and physics (usually
-   * in that order)
-   *
-   * @param elapsed the time in ms that has been elapsed since the previous
-   *   call
-   * @returns `true` if the game should stop animation
+   * Function to update all the objects
    */
-  public update(elapsed: number): boolean {
+  public update(): void {
     // Move objects
     // TODO adjust for multiple objects
-    this.trophy.move(elapsed);
-    // this.trophyPositionY += this.trophySpeed * elapsed;
+    this.trophyPositionY += this.trophySpeed;
 
     // Collision detection of objects and player
     // Use the bounding box detection method: https://computersciencewiki.org/index.php/Bounding_boxes
     // TODO adjust for multiple objects
-    if (this.player.collidesWithTrophy(this.trophy)) {
+    if (
+      this.playerPositionX < this.trophyPositionX + this.trophyImage.width
+            && this.playerPositionX + this.playerImage.width > this.trophyPositionX
+            && this.canvas.height - 150 < this.trophyPositionY + this.trophyImage.height
+            && this.canvas.height - 150 + this.playerImage.height > this.trophyPositionY
+    ) {
       // Create a new trophy in a random lane
-      this.trophy = new Trophy(this.canvas);
-      // const random = Game.randomInteger(1, 3);
-      // if (random === 1) {
-      //   this.trophy.positionX = this.leftLane;
-      // }
-      // if (random === 2) {
-      //   this.trophyPositionX = this.middleLane;
-      // }
-      // if (random === 3) {
-      //   this.trophyPositionX = this.rightLane;
-      // }
+      const random = Game.randomInteger(1, 3);
+      if (random === 1) {
+        this.trophyPositionX = this.leftLane;
+      }
+      if (random === 2) {
+        this.trophyPositionX = this.middleLane;
+      }
+      if (random === 3) {
+        this.trophyPositionX = this.rightLane;
+      }
 
-      // this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
-      // this.trophyPositionY = 60;
-      // this.trophySpeed = 1;
+      this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
+      this.trophyPositionY = 60;
+      this.trophySpeed = 1;
     }
 
     // Collision detection of objects with bottom of the canvas
-    if (this.trophy.collisionWithCanvasBottom) {
+    if (this.trophyPositionY + this.trophyImage.height > this.canvas.height) {
       // Create a new trophy in a random lane
-      this.trophy = new Trophy(this.canvas);
-      // const random = Game.randomInteger(1, 3);
-      // if (random === 1) {
-      //   this.trophyPositionX = this.leftLane;
-      // }
-      // if (random === 2) {
-      //   this.trophyPositionX = this.middleLane;
-      // }
-      // if (random === 3) {
-      //   this.trophyPositionX = this.rightLane;
-      // }
+      const random = Game.randomInteger(1, 3);
+      if (random === 1) {
+        this.trophyPositionX = this.leftLane;
+      }
+      if (random === 2) {
+        this.trophyPositionX = this.middleLane;
+      }
+      if (random === 3) {
+        this.trophyPositionX = this.rightLane;
+      }
 
-      // this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
-      // this.trophyPositionY = 60;
-      // this.trophySpeed = 1;
+      this.trophyImage = Game.loadNewImage('assets/img/objects/gold_trophy.png');
+      this.trophyPositionY = 60;
+      this.trophySpeed = 1;
     }
-    return false;
   }
 
   /**
@@ -172,21 +164,19 @@ export default class Game {
 
     // Render the player
     // Center the image in the lane with the x coordinates
-    this.player.draw(ctx);
-    // ctx.drawImage(
-    //   this.playerImage,
-    //   this.playerPositionX - this.playerImage.width / 2,
-    //   this.canvas.height - 150,
-    // );
+    ctx.drawImage(
+      this.playerImage,
+      this.playerPositionX - this.playerImage.width / 2,
+      this.canvas.height - 150,
+    );
 
     // Render the objects
     // Center the image in the lane with the x coordinates
-    this.trophy.draw(ctx);
-    // ctx.drawImage(
-    //   this.trophyImage,
-    //   this.trophyPositionX - this.trophyImage.width / 2,
-    //   this.trophyPositionY,
-    // );
+    ctx.drawImage(
+      this.trophyImage,
+      this.trophyPositionX - this.trophyImage.width / 2,
+      this.trophyPositionY,
+    );
   }
 
   /**
@@ -212,6 +202,36 @@ export default class Game {
     ctx.fillStyle = color;
     ctx.textAlign = alignment;
     ctx.fillText(text, xCoordinate, yCoordinate);
+  }
+
+  /**
+   * Generates a random integer number between min and max
+   *
+   * NOTE: this is a 'static' method. This means that this method must be called like
+   * `Game.randomInteger()` instead of `this.randomInteger()`.
+   *
+   * @param min - minimal time
+   * @param max - maximal time
+   * @returns a random integer number between min and max
+   */
+  public static randomInteger(min: number, max: number): number {
+    return Math.round(Math.random() * (max - min) + min);
+  }
+
+  /**
+   * Loads an image in such a way that the screen doesn't constantly flicker
+   *
+   *
+   * NOTE: this is a 'static' method. This means that this method must be called like
+   * `Game.loadNewImage()` instead of `this.loadNewImage()`.
+   *
+   * @param source The address or URL of the a media resource that is to be loaded
+   * @returns an HTMLImageElement with the source as its src attribute
+   */
+  private static loadNewImage(source: string): HTMLImageElement {
+    const img = new Image();
+    img.src = source;
+    return img;
   }
 }
 
